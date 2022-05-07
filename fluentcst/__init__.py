@@ -74,6 +74,29 @@ class Dict(FluentCstNode):
         return cst.Dict(elements=dict_elems)
 
 
+class Annotation(FluentCstNode):
+    def __init__(self, type_name: str) -> None:
+        # For a union of types
+        self._types = [type_name]
+
+    def or_(self, type_name: str) -> "Annotation":
+        self._types.append(type_name)
+        return self
+
+    def to_cst(self) -> cst.Annotation:
+        return cst.Annotation(_bin_or(self._types))
+
+def _bin_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
+    if len(args) == 1:
+        return cst.Name(value=args[0])
+    else:
+        return cst.BinaryOperation(
+            left=cst.Name(value=args[0]),
+            operator=cst.BitOr(),
+            right=_bin_or(args[1:]),
+        )
+
+
 class Call(FluentCstNode):
     def __init__(self, name___: str, **kwargs: str) -> None:
         self._name = name___
