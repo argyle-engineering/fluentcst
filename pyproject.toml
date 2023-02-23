@@ -11,6 +11,13 @@ libcst = "^0.4.1"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.2.1"
+pytest-clarity = "^1.0.1"
+pytest-cov = "^4.0.0"
+taskipy = "^1.10.1"
+
+[tool.taskipy.tasks]
+test = "pytest --cov=fluentcst tests -vv"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

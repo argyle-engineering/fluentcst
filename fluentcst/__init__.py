@@ -12,7 +12,6 @@ import libcst as cst
 
 class FluentCstNode:
     def to_code(self) -> str:
-        # TODO(povilas): optionally use black
         cst_node = self.to_cst()
         if isinstance(cst_node, cst.List):
             # TODO(povilas): see if I can remove Expr?
@@ -38,6 +37,25 @@ class String(FluentCstNode):
     def to_cst(self) -> cst.SimpleString:
         return cst.SimpleString(value=f'"{self._value}"')
 
+class Attribute(FluentCstNode):
+    """
+    ```py
+    fluentcst.Attribute("data.model.field")
+    ```
+    """
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+
+    def to_cst(self) -> cst.Attribute:
+        parts = self._path.split(".")
+        assert len(parts) == 2, "Only one dot is supported for now."
+        # TODO(povilas): recursively create value
+        return cst.Attribute(
+            value=cst.Name(value=parts[0]),
+            attr=cst.Name(value=parts[-1]),
+        )
+
 
 class List(FluentCstNode):
     def __init__(self, elements: list["str | Call"]) -> None:
@@ -61,18 +79,25 @@ class Dict(FluentCstNode):
         return dict_node
 
     def __init__(self) -> None:
-        self._elements: list[tuple[str, str]] = []
+        self._elements: list[tuple[str, str | Attribute]] = []
 
-    def element(self, key: str, value: str) -> "Dict":
+    def element(self, key: str, value: str | Attribute) -> "Dict":
         self._elements.append((key, value))
         return self
 
     def to_cst(self) -> cst.Dict:
         dict_elems = [
-            cst.DictElement(key=String(k).to_cst(), value=String(v).to_cst())
+            cst.DictElement(key=String(k).to_cst(), value=self._str_or_attr(v))
             for k, v in self._elements
         ]
         return cst.Dict(elements=dict_elems)
+
+    @staticmethod
+    def _str_or_attr(v: str | Attribute) -> cst.SimpleString | cst.Attribute:
+        if isinstance(v, str):
+            return String(v).to_cst()
+        else:
+            return v.to_cst()
 
 
 class Annotation(FluentCstNode):
@@ -110,6 +135,8 @@ class Call(FluentCstNode):
             for k, v in self._kwargs.items()
         ]
         return cst.Call(func=cst.Name(value=self._name), args=call_args)
+
+
 
 
 class ClassDef(FluentCstNode):
