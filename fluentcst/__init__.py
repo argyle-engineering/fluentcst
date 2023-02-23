@@ -86,6 +86,7 @@ class Annotation(FluentCstNode):
     def to_cst(self) -> cst.Annotation:
         return cst.Annotation(_bin_or(self._types))
 
+
 def _bin_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
     if len(args) == 1:
         return cst.Name(value=args[0])
@@ -121,7 +122,9 @@ class ClassDef(FluentCstNode):
             body=cst.IndentedBlock(body=self._fields),
         )
 
-    def field(self, **kwargs: str | dict[str, str] | list[str | Call]) -> "ClassDef":
+    def field(
+        self, **kwargs: str | Call | dict[str, str] | list[str | Call]
+    ) -> "ClassDef":
         for k, v in kwargs.items():
             value_node = _value(v)
             field_node = cst.SimpleStatementLine(
@@ -148,11 +151,16 @@ def _value(v: dict[str, str]) -> Dict:
 
 
 @overload
+def _value(v: Call) -> Call:
+    ...
+
+
+@overload
 def _value(v: list[str | Call]) -> List:
     ...
 
 
-def _value(v: str | dict[str, str] | list) -> String | Dict | List:
+def _value(v: str | Call | dict[str, str] | list) -> String | Dict | List | Call:
     match v:
         case str():
             return String(v)
@@ -160,5 +168,7 @@ def _value(v: str | dict[str, str] | list) -> String | Dict | List:
             return Dict().from_dict(v)
         case list():
             return List(v)
+        case Call():
+            return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
