@@ -150,8 +150,8 @@ class ClassDef(FluentCstNode):
         return self
 
     def field(
-        self, **kwargs: str | Call | dict[str, str] | list[str | Call]
-    ) -> "ClassDef":
+        self, **kwargs: str | Call | dict[str, str] | list[str | Call] | Dict
+    ) -> Self:
         for k, v in kwargs.items():
             value_node = _value(v)
             field_node = cst.SimpleStatementLine(
@@ -189,13 +189,17 @@ def _value(v: dict[str, str]) -> Dict:
 def _value(v: Call) -> Call:
     ...
 
+@overload
+def _value(v: Dict) -> Dict:
+    ...
+
 
 @overload
 def _value(v: list[str | Call]) -> List:
     ...
 
 
-def _value(v: str | Call | dict[str, str] | list) -> String | Dict | List | Call:
+def _value(v: str | Call | dict[str, str] | list | Dict) -> String | Dict | List | Call:
     match v:
         case str():
             return String(v)
@@ -203,7 +207,7 @@ def _value(v: str | Call | dict[str, str] | list) -> String | Dict | List | Call
             return Dict().from_dict(v)
         case list():
             return List(v)
-        case Call():
+        case Call() | Dict():
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
