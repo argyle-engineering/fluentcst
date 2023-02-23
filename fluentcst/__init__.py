@@ -70,9 +70,8 @@ class List(FluentCstNode):
 
 
 class Dict(FluentCstNode):
-    # TODO(povilas): only dict[str, str] is supported for now
     @classmethod
-    def from_dict(cls: type["Dict"], d: dict[str, str]) -> "Dict":
+    def from_dict(cls, d: dict[str, str] | dict[str, str | Attribute]) -> Self:
         dict_node = cls()
         for k, v in d.items():
             dict_node.element(k, v)
