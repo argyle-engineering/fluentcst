@@ -6,6 +6,7 @@ Reference:
 
 from typing import overload
 
+from typing_extensions import Self
 import libcst as cst
 
 
@@ -115,12 +116,11 @@ class ClassDef(FluentCstNode):
     def __init__(self, name: str) -> None:
         self._name = name
         self._fields = []
+        self._bases = []
 
-    def to_cst(self) -> cst.ClassDef:
-        return cst.ClassDef(
-            name=cst.Name(value=self._name),
-            body=cst.IndentedBlock(body=self._fields),
-        )
+    def base(self, class_name: str) -> Self:
+        self._bases.append(class_name)
+        return self
 
     def field(
         self, **kwargs: str | Call | dict[str, str] | list[str | Call]
@@ -138,6 +138,14 @@ class ClassDef(FluentCstNode):
             self._fields.append(field_node)
 
         return self
+
+    def to_cst(self) -> cst.ClassDef:
+        bases = [cst.Arg(value=cst.Name(value=base_cls)) for base_cls in self._bases]
+        return cst.ClassDef(
+            name=cst.Name(value=self._name),
+            body=cst.IndentedBlock(body=self._fields),
+            bases=bases,
+        )
 
 
 @overload
