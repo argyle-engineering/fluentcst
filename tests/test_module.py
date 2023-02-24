@@ -2,6 +2,7 @@ from textwrap import dedent
 
 import fluentcst as fcst
 
+
 def test_multiple_classes():
     module = (
         fcst.Module()
@@ -9,12 +10,15 @@ def test_multiple_classes():
         .add(fcst.ClassDef("Cls2").field(f1="v1"))
     )
 
-    assert module.to_code() == dedent("""\
+    assert module.to_code() == dedent(
+        """\
         class Cls1:
             f1 = "v1"
         class Cls2:
             f1 = "v1"
-    """)
+    """
+    )
+
 
 def test_require_import():
     module = (
@@ -23,8 +27,10 @@ def test_require_import():
         .add(fcst.ClassDef("Cls1"))
     )
 
-    assert module.to_code() == dedent("""\
+    assert module.to_code() == dedent(
+        """\
         from lib.types.exceptions import Error
         class Cls1:
             pass
-    """)
+    """
+    )

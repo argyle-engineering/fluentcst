@@ -37,6 +37,7 @@ class String(FluentCstNode):
     def to_cst(self) -> cst.SimpleString:
         return cst.SimpleString(value=f'"{self._value}"')
 
+
 class Attribute(FluentCstNode):
     """
     ```py
@@ -146,8 +147,6 @@ class Call(FluentCstNode):
         return cst.Call(func=cst.Name(value=self._name), args=call_args)
 
 
-
-
 class ClassDef(FluentCstNode):
     def __init__(self, name: str) -> None:
         self._name = name
@@ -184,7 +183,6 @@ class ClassDef(FluentCstNode):
         )
 
 
-
 class Module(FluentCstNode):
     def __init__(self) -> None:
         self._statements: list[FluentCstNode] = []
@@ -206,6 +204,7 @@ class Module(FluentCstNode):
     def to_code(self) -> str:
         return self.to_cst().code
 
+
 class ImportFrom(FluentCstNode):
     """`from mylib.types import MyType`"""
 
@@ -214,15 +213,20 @@ class ImportFrom(FluentCstNode):
         self._symbol = symbol
 
     def to_cst(self) -> cst.SimpleStatementLine:
-        module = Attribute(self._path).to_cst() if "." in self._path \
+        module = (
+            Attribute(self._path).to_cst()
+            if "." in self._path
             else cst.Name(value=self._path)
+        )
 
-        return cst.SimpleStatementLine(body=[
-            cst.ImportFrom(
-                module=module,
-                names=[cst.ImportAlias(name=cst.Name(value=self._symbol))],
-            )
-        ])
+        return cst.SimpleStatementLine(
+            body=[
+                cst.ImportFrom(
+                    module=module,
+                    names=[cst.ImportAlias(name=cst.Name(value=self._symbol))],
+                )
+            ]
+        )
 
 
 @overload
@@ -238,6 +242,7 @@ def _value(v: dict[str, str]) -> Dict:
 @overload
 def _value(v: Call) -> Call:
     ...
+
 
 @overload
 def _value(v: Dict) -> Dict:
