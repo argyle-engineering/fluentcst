@@ -45,15 +45,25 @@ class Attribute(FluentCstNode):
     """
 
     def __init__(self, path: str) -> None:
+        assert "." in path, "Attribute path must contain at least one dot."
         self._path = path
 
     def to_cst(self) -> cst.Attribute:
         parts = self._path.split(".")
-        assert len(parts) == 2, "Only one dot is supported for now."
-        # TODO(povilas): recursively create value
+        import_symbol = parts.pop()
         return cst.Attribute(
-            value=cst.Name(value=parts[0]),
-            attr=cst.Name(value=parts[-1]),
+            value=self._name_or_attr(parts),
+            attr=cst.Name(value=import_symbol),
+        )
+
+    @staticmethod
+    def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute:
+        if len(parts) == 1:
+            return cst.Name(value=parts.pop())
+        attr = parts.pop()
+        return cst.Attribute(
+            value=Attribute._name_or_attr(parts),
+            attr=cst.Name(value=attr),
         )
 
 
@@ -172,6 +182,47 @@ class ClassDef(FluentCstNode):
             body=cst.IndentedBlock(body=self._fields),
             bases=bases,
         )
+
+
+
+class Module(FluentCstNode):
+    def __init__(self) -> None:
+        self._statements: list[FluentCstNode] = []
+        self._imports: list[ImportFrom] = []
+
+    def add(self, node: ClassDef) -> Self:
+        self._statements.append(node)
+        return self
+
+    def require_import(self, obj_name: str, from_: str) -> Self:
+        self._imports.append(ImportFrom(path=from_, symbol=obj_name))
+        return self
+
+    def to_cst(self) -> cst.Module:
+        body = [i.to_cst() for i in self._imports]
+        body += [s.to_cst() for s in self._statements]
+        return cst.Module(body=body)  # type: ignore
+
+    def to_code(self) -> str:
+        return self.to_cst().code
+
+class ImportFrom(FluentCstNode):
+    """`from mylib.types import MyType`"""
+
+    def __init__(self, path: str, symbol: str) -> None:
+        self._path = path
+        self._symbol = symbol
+
+    def to_cst(self) -> cst.SimpleStatementLine:
+        module = Attribute(self._path).to_cst() if "." in self._path \
+            else cst.Name(value=self._path)
+
+        return cst.SimpleStatementLine(body=[
+            cst.ImportFrom(
+                module=module,
+                names=[cst.ImportAlias(name=cst.Name(value=self._symbol))],
+            )
+        ])
 
 
 @overload
