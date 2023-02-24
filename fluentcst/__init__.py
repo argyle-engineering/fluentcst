@@ -186,14 +186,14 @@ class ClassDef(FluentCstNode):
 class Module(FluentCstNode):
     def __init__(self) -> None:
         self._statements: list[FluentCstNode] = []
-        self._imports: list[ImportFrom] = []
+        self._imports: set[ImportFrom] = set()
 
     def add(self, node: ClassDef) -> Self:
         self._statements.append(node)
         return self
 
     def require_import(self, obj_name: str, from_: str) -> Self:
-        self._imports.append(ImportFrom(path=from_, symbol=obj_name))
+        self._imports.add(ImportFrom(path=from_, symbol=obj_name))
         return self
 
     def to_cst(self) -> cst.Module:
@@ -227,6 +227,16 @@ class ImportFrom(FluentCstNode):
                 )
             ]
         )
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, ImportFrom)
+            and self._path == other._path
+            and self._symbol == other._symbol
+        )
+
+    def __hash__(self) -> int:
+        return hash(self._path + self._symbol)
 
 
 @overload

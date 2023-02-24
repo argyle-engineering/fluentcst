@@ -24,6 +24,7 @@ def test_require_import():
     module = (
         fcst.Module()
         .require_import("Error", "lib.types.exceptions")
+        .require_import("Error", "lib.types.exceptions")
         .add(fcst.ClassDef("Cls1"))
     )
 
