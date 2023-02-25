@@ -38,6 +38,17 @@ class String(FluentCstNode):
         return cst.SimpleString(value=f'"{self._value}"')
 
 
+class Boolean(FluentCstNode):
+    def __init__(self, value: bool) -> None:
+        self._value = value
+
+    def to_cst(self) -> cst.Expr:
+        if self._value is True:
+            return cst.Expr(value=cst.Name(value="True"))
+        else:
+            return cst.Expr(value=cst.Name(value="False"))
+
+
 class Attribute(FluentCstNode):
     """
     ```py
@@ -135,13 +146,14 @@ def _bin_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
 
 
 class Call(FluentCstNode):
-    def __init__(self, name___: str, **kwargs: str) -> None:
-        self._name = name___
+    def __init__(self, name: str, *args, **kwargs: str | bool) -> None:
+        self._name = name
+        self._args = args
         self._kwargs = kwargs
 
     def to_cst(self) -> cst.Call:
-        call_args = [
-            cst.Arg(value=String(v).to_cst(), keyword=cst.Name(value=k))
+        call_args = [cst.Arg(value=_value(a).to_cst()) for a in self._args] + [
+            cst.Arg(value=_value(v).to_cst(), keyword=cst.Name(value=k))
             for k, v in self._kwargs.items()
         ]
         return cst.Call(func=cst.Name(value=self._name), args=call_args)
@@ -245,6 +257,11 @@ def _value(v: str) -> String:
 
 
 @overload
+def _value(v: bool) -> Boolean:
+    ...
+
+
+@overload
 def _value(v: dict[str, str]) -> Dict:
     ...
 
@@ -264,10 +281,12 @@ def _value(v: list[str | Call]) -> List:
     ...
 
 
-def _value(v: str | Call | dict[str, str] | list | Dict) -> String | Dict | List | Call:
+def _value(v):
     match v:
         case str():
             return String(v)
+        case bool():
+            return Boolean(v)
         case dict():
             return Dict().from_dict(v)
         case list():
