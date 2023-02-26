@@ -49,6 +49,16 @@ class Boolean(FluentCstNode):
             return cst.Expr(value=cst.Name(value="False"))
 
 
+class Name(FluentCstNode):
+    """Arbitrary name: could be a variable, class, function, etc."""
+
+    def __init__(self, value: str) -> None:
+        self._value = value
+
+    def to_cst(self) -> cst.Name:
+        return cst.Name(value=self._value)
+
+
 class Attribute(FluentCstNode):
     """
     ```py
@@ -282,6 +292,11 @@ def _value(v: Attribute) -> Attribute:
 
 
 @overload
+def _value(v: Name) -> Name:
+    ...
+
+
+@overload
 def _value(v: list[str | Call]) -> List:
     ...
 
@@ -296,7 +311,7 @@ def _value(v):
             return Dict().from_dict(v)
         case list():
             return List(v)
-        case Call() | Dict() | Attribute():
+        case Call() | Dict() | Attribute() | Name():
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
