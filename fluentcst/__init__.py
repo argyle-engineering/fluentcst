@@ -6,8 +6,8 @@ Reference:
 
 from typing import overload
 
-from typing_extensions import Self
 import libcst as cst
+from typing_extensions import Self
 
 
 class FluentCstNode:
@@ -25,10 +25,10 @@ class FluentCstNode:
 
 
 class RawNode(FluentCstNode):
-    def __init__(self, node: cst.CSTNode) -> None:
+    def __init__(self, node: cst.BaseExpression) -> None:
         self._node = node
 
-    def to_cst(self) -> cst.CSTNode:
+    def to_cst(self) -> cst.BaseExpression:
         return self._node
 
 
@@ -195,7 +195,14 @@ class ClassDef(FluentCstNode):
         return self
 
     def field(
-        self, **kwargs: str | Call | dict[str, str] | list[str | Call] | Dict
+        self,
+        **kwargs: str
+        | Call
+        | dict[str, str]
+        | list[str | Call]
+        | list[RawNode]
+        | Dict
+        | RawNode,
     ) -> Self:
         for k, v in kwargs.items():
             value_node = _value(v)
@@ -323,6 +330,11 @@ def _value(v: RawNode) -> RawNode:
 
 @overload
 def _value(v: list[str | Call]) -> List:
+    ...
+
+
+@overload
+def _value(v: list[RawNode]) -> List:
     ...
 
 
