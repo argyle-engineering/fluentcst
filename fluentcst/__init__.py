@@ -51,10 +51,7 @@ class Boolean(FluentCstNode):
         self._value = value
 
     def to_cst(self) -> cst.Expr:
-        if self._value is True:
-            return cst.Expr(value=cst.Name(value="True"))
-        else:
-            return cst.Expr(value=cst.Name(value="False"))
+        return cst.Expr(value=cst.Name(value=str(self._value)))
 
 
 class Integer(FluentCstNode):
