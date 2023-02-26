@@ -277,6 +277,11 @@ def _value(v: Dict) -> Dict:
 
 
 @overload
+def _value(v: Attribute) -> Attribute:
+    ...
+
+
+@overload
 def _value(v: list[str | Call]) -> List:
     ...
 
@@ -291,7 +296,7 @@ def _value(v):
             return Dict().from_dict(v)
         case list():
             return List(v)
-        case Call() | Dict():
+        case Call() | Dict() | Attribute():
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
