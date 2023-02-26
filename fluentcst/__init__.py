@@ -24,6 +24,14 @@ class FluentCstNode:
         raise NotImplemented
 
 
+class RawNode(FluentCstNode):
+    def __init__(self, node: cst.CSTNode) -> None:
+        self._node = node
+
+    def to_cst(self) -> cst.CSTNode:
+        return self._node
+
+
 class Assign(FluentCstNode):
     pass
 
@@ -47,6 +55,14 @@ class Boolean(FluentCstNode):
             return cst.Expr(value=cst.Name(value="True"))
         else:
             return cst.Expr(value=cst.Name(value="False"))
+
+
+class Integer(FluentCstNode):
+    def __init__(self, value: int) -> None:
+        self._value = value
+
+    def to_cst(self) -> cst.Integer:
+        return cst.Integer(value=str(self._value))
 
 
 class Name(FluentCstNode):
@@ -90,14 +106,11 @@ class Attribute(FluentCstNode):
 
 
 class List(FluentCstNode):
-    def __init__(self, elements: list["str | Call"]) -> None:
+    def __init__(self, elements: list["str | bool | Call | RawNode"]) -> None:
         self._elements = elements
 
     def to_cst(self) -> cst.List:
-        elems = [
-            cst.Element(value=String(v).to_cst() if isinstance(v, str) else v.to_cst())
-            for v in self._elements
-        ]
+        elems = [cst.Element(value=_value(v).to_cst()) for v in self._elements]
         return cst.List(elements=elems)
 
 
@@ -156,8 +169,13 @@ def _bin_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
 
 
 class Call(FluentCstNode):
-    def __init__(self, name: str, *args, **kwargs: str | bool) -> None:
-        self._name = name
+    def __init__(
+        self,
+        name__: str,
+        *args: str | bool | int | Name | Attribute,
+        **kwargs: str | bool | int,
+    ) -> None:
+        self._name = name__
         self._args = args
         self._kwargs = kwargs
 
@@ -267,6 +285,11 @@ def _value(v: str) -> String:
 
 
 @overload
+def _value(v: int) -> Integer:
+    ...
+
+
+@overload
 def _value(v: bool) -> Boolean:
     ...
 
@@ -297,21 +320,29 @@ def _value(v: Name) -> Name:
 
 
 @overload
+def _value(v: RawNode) -> RawNode:
+    ...
+
+
+@overload
 def _value(v: list[str | Call]) -> List:
     ...
 
 
 def _value(v):
+    # TODO(povilas): can we wrap str | int | bool into smth like Primitive?
     match v:
         case str():
             return String(v)
         case bool():
             return Boolean(v)
+        case int():
+            return Integer(v)
         case dict():
             return Dict().from_dict(v)
         case list():
             return List(v)
-        case Call() | Dict() | Attribute() | Name():
+        case Call() | Dict() | Attribute() | Name() | RawNode():
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
