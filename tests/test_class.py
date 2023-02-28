@@ -11,3 +11,18 @@ def test_field_can_be_fluent_dict():
             f1 = {"d1": "v1"}
     """
     )
+
+
+def test_field_can_be_attribute_with_bitor():
+    code = (
+        fcst.ClassDef("Cls1")
+        .field(data=fcst.Attribute("BaseCls.data").bitor({"a": "b"}))
+        .to_code()
+    )
+
+    assert code == dedent(
+        """\
+        class Cls1:
+            data = BaseCls.data | {"a": "b"}
+    """
+    )

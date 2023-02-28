@@ -21,7 +21,7 @@ class FluentCstNode:
 
     # TODO(povilas): abstract method
     def to_cst(self) -> cst.SimpleStatementLine | cst.BaseCompoundStatement | cst.List:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class RawNode(FluentCstNode):
@@ -82,14 +82,34 @@ class Attribute(FluentCstNode):
     def __init__(self, path: str) -> None:
         assert "." in path, "Attribute path must contain at least one dot."
         self._path = path
+        self._bitor: dict | None = None
+        # Only dict supported for now.
 
-    def to_cst(self) -> cst.Attribute:
+    def to_cst(self) -> cst.Attribute | cst.BinaryOperation:
         parts = self._path.split(".")
         import_symbol = parts.pop()
-        return cst.Attribute(
+        attr = cst.Attribute(
             value=self._name_or_attr(parts),
             attr=cst.Name(value=import_symbol),
         )
+
+        if self._bitor:
+            return cst.BinaryOperation(
+                left=attr,
+                operator=cst.BitOr(),
+                right=Dict.from_dict(self._bitor).to_cst(),
+            )
+
+        return attr
+
+    def bitor(self, other: dict) -> Self:
+        """Bitwise or with another value.
+        ```py
+        Attribute("resp.data").bitor({"error": ""})
+        ```
+        """
+        self._bitor = other
+        return self
 
     @staticmethod
     def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute:
@@ -134,7 +154,9 @@ class Dict(FluentCstNode):
         return cst.Dict(elements=dict_elems)
 
     @staticmethod
-    def _str_or_attr(v: str | Attribute) -> cst.SimpleString | cst.Attribute:
+    def _str_or_attr(
+        v: str | Attribute,
+    ) -> cst.SimpleString | cst.Attribute | cst.BinaryOperation:
         if isinstance(v, str):
             return String(v).to_cst()
         else:
@@ -151,18 +173,18 @@ class Annotation(FluentCstNode):
         return self
 
     def to_cst(self) -> cst.Annotation:
-        return cst.Annotation(_bin_or(self._types))
+        return cst.Annotation(self._bit_or(self._types))
 
-
-def _bin_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
-    if len(args) == 1:
-        return cst.Name(value=args[0])
-    else:
-        return cst.BinaryOperation(
-            left=cst.Name(value=args[0]),
-            operator=cst.BitOr(),
-            right=_bin_or(args[1:]),
-        )
+    @staticmethod
+    def _bit_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
+        if len(args) == 1:
+            return cst.Name(value=args[0])
+        else:
+            return cst.BinaryOperation(
+                left=cst.Name(value=args[0]),
+                operator=cst.BitOr(),
+                right=Annotation._bit_or(args[1:]),
+            )
 
 
 class Call(FluentCstNode):
@@ -202,6 +224,7 @@ class ClassDef(FluentCstNode):
         | list[str | Call]
         | list[RawNode]
         | Dict
+        | Attribute
         | RawNode,
     ) -> Self:
         for k, v in kwargs.items():
@@ -262,6 +285,8 @@ class ImportFrom(FluentCstNode):
             if "." in self._path
             else cst.Name(value=self._path)
         )
+        # Technically Attribute.to_cst() can produce BinaryOperation, but not in here.
+        assert isinstance(module, cst.Attribute) or isinstance(module, cst.Name)
 
         return cst.SimpleStatementLine(
             body=[
