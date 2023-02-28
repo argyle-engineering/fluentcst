@@ -21,6 +21,7 @@ black = "^23.1.0"
 test = "pytest --cov=fluentcst tests -vv"
 check_types = "(npm list -g pyright@1.1.295 || npm install -g pyright@1.1.295) && pyright"
 fmt = "black fluentcst tests"
+check_fmt = "black --check ."
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
