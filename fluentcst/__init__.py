@@ -133,7 +133,7 @@ class List(FluentCstNode):
 
 class Dict(FluentCstNode):
     @classmethod
-    def from_dict(cls, d: dict[str, str] | dict[str, str | Attribute]) -> Self:
+    def from_dict(cls, d: dict) -> Self:
         dict_node = cls()
         for k, v in d.items():
             dict_node.element(k, v)
@@ -148,19 +148,20 @@ class Dict(FluentCstNode):
 
     def to_cst(self) -> cst.Dict:
         dict_elems = [
-            cst.DictElement(key=String(k).to_cst(), value=self._str_or_attr(v))
+            cst.DictElement(key=String(k).to_cst(), value=self._recurse(v))
             for k, v in self._elements
         ]
         return cst.Dict(elements=dict_elems)
 
     @staticmethod
-    def _str_or_attr(
-        v: str | Attribute,
-    ) -> cst.SimpleString | cst.Attribute | cst.BinaryOperation:
+    def _recurse(
+        v: str | Attribute | dict,
+    ) -> cst.SimpleString | cst.Attribute | cst.BinaryOperation | cst.Dict:
+        if isinstance(v, dict):
+            return Dict.from_dict(v).to_cst()
         if isinstance(v, str):
             return String(v).to_cst()
-        else:
-            return v.to_cst()
+        return v.to_cst()
 
 
 class Annotation(FluentCstNode):
@@ -220,7 +221,7 @@ class ClassDef(FluentCstNode):
         self,
         **kwargs: str
         | Call
-        | dict[str, str]
+        | dict
         | list[str | Call]
         | list[RawNode]
         | Dict
