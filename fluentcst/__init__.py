@@ -155,13 +155,13 @@ class Dict(FluentCstNode):
 
     @staticmethod
     def _recurse(
-        v: str | Attribute | dict,
-    ) -> cst.SimpleString | cst.Attribute | cst.BinaryOperation | cst.Dict:
+        v: str | Attribute | dict | int,
+    ) -> (
+        cst.SimpleString | cst.Attribute | cst.BinaryOperation | cst.Dict | cst.Integer
+    ):
         if isinstance(v, dict):
             return Dict.from_dict(v).to_cst()
-        if isinstance(v, str):
-            return String(v).to_cst()
-        return v.to_cst()
+        return _value(v).to_cst()
 
 
 class Annotation(FluentCstNode):

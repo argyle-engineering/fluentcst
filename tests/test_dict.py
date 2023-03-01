@@ -6,6 +6,10 @@ def test_only_string():
     assert code == '{"f1": "v1", "f2": "v2"}'
 
 
+def test_integer_fields():
+    assert fcst.Dict.from_dict({"f1": 1}).to_code() == '{"f1": 1}'
+
+
 def test_attribute_value():
     code = fcst.Dict().element("f1", fcst.Attribute("Person.name")).to_code()
     assert code == '{"f1": Person.name}'
