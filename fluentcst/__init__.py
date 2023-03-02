@@ -32,10 +32,6 @@ class RawNode(FluentCstNode):
         return self._node
 
 
-class Assign(FluentCstNode):
-    pass
-
-
 class String(FluentCstNode):
     """SimpleString for now only."""
 
