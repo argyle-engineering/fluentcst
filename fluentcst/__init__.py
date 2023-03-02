@@ -4,7 +4,7 @@ Reference:
 * https://github.com/lensvol/astboom
 """
 
-from typing import overload
+from typing import overload, Literal
 
 import libcst as cst
 from typing_extensions import Self
@@ -223,17 +223,22 @@ class ClassDef(FluentCstNode):
         | list[RawNode]
         | Dict
         | Attribute
-        | RawNode,
+        | RawNode
+        | None = None,
+        type: str | None = None,
     ) -> Self:
-        value_node = _value(value)
-        field_node = cst.SimpleStatementLine(
-            body=[
-                cst.Assign(
-                    targets=[cst.AssignTarget(target=cst.Name(value=name))],
-                    value=value_node.to_cst(),
-                )
-            ]
-        )
+        if type:
+            assign = cst.AnnAssign(
+                target=cst.Name(value=name), annotation=Annotation(type).to_cst()
+            )
+        else:
+            assert value is not None, "None is not yet supported"
+            value_node = _value(value)
+            assign = cst.Assign(
+                targets=[cst.AssignTarget(target=cst.Name(value=name))],
+                value=value_node.to_cst(),
+            )
+        field_node = cst.SimpleStatementLine(body=[assign])
         self._fields.append(field_node)
 
         return self

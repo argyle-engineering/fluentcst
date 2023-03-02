@@ -38,3 +38,13 @@ def test_field_can_be_attribute_with_bitor():
             data = BaseCls.data | {"a": "b"}
     """
     )
+
+
+def test_field_with_only_type_declaration():
+    code = fcst.ClassDef("Cls1").field("f1", type="int").to_code()
+    assert code == dedent(
+        """\
+        class Cls1:
+            f1: int
+    """
+    )
