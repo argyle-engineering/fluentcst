@@ -6,8 +6,8 @@ import fluentcst as fcst
 def test_multiple_classes():
     module = (
         fcst.Module()
-        .add(fcst.ClassDef("Cls1").field(f1="v1"))
-        .add(fcst.ClassDef("Cls2").field(f1="v1"))
+        .add(fcst.ClassDef("Cls1").field("f1", "v1"))
+        .add(fcst.ClassDef("Cls2").field("f1", "v1"))
     )
 
     assert module.to_code() == dedent(

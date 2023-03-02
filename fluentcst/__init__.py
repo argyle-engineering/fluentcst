@@ -219,7 +219,8 @@ class ClassDef(FluentCstNode):
 
     def field(
         self,
-        **kwargs: str
+        name: str,
+        value: str
         | Call
         | dict
         | list[str | Call]
@@ -228,17 +229,16 @@ class ClassDef(FluentCstNode):
         | Attribute
         | RawNode,
     ) -> Self:
-        for k, v in kwargs.items():
-            value_node = _value(v)
-            field_node = cst.SimpleStatementLine(
-                body=[
-                    cst.Assign(
-                        targets=[cst.AssignTarget(target=cst.Name(value=k))],
-                        value=value_node.to_cst(),
-                    )
-                ]
-            )
-            self._fields.append(field_node)
+        value_node = _value(value)
+        field_node = cst.SimpleStatementLine(
+            body=[
+                cst.Assign(
+                    targets=[cst.AssignTarget(target=cst.Name(value=name))],
+                    value=value_node.to_cst(),
+                )
+            ]
+        )
+        self._fields.append(field_node)
 
         return self
 
