@@ -48,3 +48,13 @@ def test_field_with_only_type_declaration():
             f1: int
     """
     )
+
+
+def test_field_with_list_type():
+    code = fcst.ClassDef("Cls1").field("f1", type=["int"]).to_code()
+    assert code == dedent(
+        """\
+        class Cls1:
+            f1: list[int]
+    """
+    )

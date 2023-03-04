@@ -4,7 +4,7 @@ Reference:
 * https://github.com/lensvol/astboom
 """
 
-from typing import overload, Literal
+from typing import overload
 
 import libcst as cst
 from typing_extensions import Self
@@ -161,11 +161,15 @@ class Dict(FluentCstNode):
 
 
 class Annotation(FluentCstNode):
-    def __init__(self, type_name: str) -> None:
+    def __init__(self, type_name: str | list[str]) -> None:
+        """
+        Args:
+            type_name: 'Type' or 'list[Type]'.
+        """
         # For a union of types
         self._types = [type_name]
 
-    def or_(self, type_name: str) -> "Annotation":
+    def or_(self, type_name: str) -> Self:
         self._types.append(type_name)
         return self
 
@@ -173,15 +177,32 @@ class Annotation(FluentCstNode):
         return cst.Annotation(self._bit_or(self._types))
 
     @staticmethod
-    def _bit_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
+    def _bit_or(
+        args: list[str | list[str]],
+    ) -> cst.BinaryOperation | cst.Name | cst.Subscript:
         if len(args) == 1:
-            return cst.Name(value=args[0])
+            return Annotation._type_name_or_list(args[0])
         else:
             return cst.BinaryOperation(
-                left=cst.Name(value=args[0]),
+                left=Annotation._type_name_or_list(args[0]),
                 operator=cst.BitOr(),
                 right=Annotation._bit_or(args[1:]),
             )
+
+    @staticmethod
+    def _type_name_or_list(type_: str | list[str]) -> cst.Name | cst.Subscript:
+        if isinstance(type_, list):
+            return cst.Subscript(
+                value=cst.Name(value="list"),
+                slice=[
+                    cst.SubscriptElement(
+                        slice=cst.Index(
+                            value=cst.Name(value=type_[0]),
+                        ),
+                    )
+                ],
+            )
+        return cst.Name(value=type_)
 
 
 class Call(FluentCstNode):
@@ -225,7 +246,7 @@ class ClassDef(FluentCstNode):
         | Attribute
         | RawNode
         | None = None,
-        type: str | None = None,
+        type: str | list[str] | None = None,
     ) -> Self:
         if type:
             assign = cst.AnnAssign(
