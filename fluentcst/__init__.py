@@ -4,7 +4,7 @@ Reference:
 * https://github.com/lensvol/astboom
 """
 
-from typing import overload, Literal
+from typing import overload
 
 import libcst as cst
 from typing_extensions import Self
@@ -83,10 +83,10 @@ class Attribute(FluentCstNode):
 
     def to_cst(self) -> cst.Attribute | cst.BinaryOperation:
         parts = self._path.split(".")
-        import_symbol = parts.pop()
+        last_part = parts.pop()
         attr = cst.Attribute(
             value=self._name_or_attr(parts),
-            attr=cst.Name(value=import_symbol),
+            attr=cst.Name(value=last_part),
         )
 
         if self._bitor:
@@ -108,14 +108,31 @@ class Attribute(FluentCstNode):
         return self
 
     @staticmethod
-    def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute:
-        if len(parts) == 1:
-            return cst.Name(value=parts.pop())
+    def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute | cst.Subscript:
         attr = parts.pop()
+        if len(parts) == 0:
+            return cst.Name(value=attr)
+
+        if attr.endswith("]"):
+            path, index = attr.split("[")
+            index = index[:-1]
+            if index.isalnum():
+                index = int(index)
+            return _subscript(
+                cst.Attribute(
+                    value=Attribute._name_or_attr(parts), attr=cst.Name(value=path)
+                ),
+                _value(index).to_cst(),
+            )
+
         return cst.Attribute(
             value=Attribute._name_or_attr(parts),
             attr=cst.Name(value=attr),
         )
+
+    def __repr__(self) -> str:
+        or_part = f" | {self._bitor}" if self._bitor else ""
+        return f"Attribute('{self._path}'{or_part})"
 
 
 class List(FluentCstNode):
@@ -161,11 +178,15 @@ class Dict(FluentCstNode):
 
 
 class Annotation(FluentCstNode):
-    def __init__(self, type_name: str) -> None:
+    def __init__(self, type_name: str | list[str]) -> None:
+        """
+        Args:
+            type_name: 'Type' or 'list[Type]'.
+        """
         # For a union of types
         self._types = [type_name]
 
-    def or_(self, type_name: str) -> "Annotation":
+    def or_(self, type_name: str) -> Self:
         self._types.append(type_name)
         return self
 
@@ -173,15 +194,23 @@ class Annotation(FluentCstNode):
         return cst.Annotation(self._bit_or(self._types))
 
     @staticmethod
-    def _bit_or(args: list[str]) -> cst.BinaryOperation | cst.Name:
+    def _bit_or(
+        args: list[str | list[str]],
+    ) -> cst.BinaryOperation | cst.Name | cst.Subscript:
         if len(args) == 1:
-            return cst.Name(value=args[0])
+            return Annotation._type_name_or_list(args[0])
         else:
             return cst.BinaryOperation(
-                left=cst.Name(value=args[0]),
+                left=Annotation._type_name_or_list(args[0]),
                 operator=cst.BitOr(),
                 right=Annotation._bit_or(args[1:]),
             )
+
+    @staticmethod
+    def _type_name_or_list(type_: str | list[str]) -> cst.Name | cst.Subscript:
+        if isinstance(type_, list):
+            return _subscript(cst.Name(value="list"), cst.Name(value=type_[0]))
+        return cst.Name(value=type_)
 
 
 class Call(FluentCstNode):
@@ -225,7 +254,7 @@ class ClassDef(FluentCstNode):
         | Attribute
         | RawNode
         | None = None,
-        type: str | None = None,
+        type: str | list[str] | None = None,
     ) -> Self:
         if type:
             assign = cst.AnnAssign(
@@ -382,3 +411,12 @@ def _value(v):
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
+
+
+def _subscript(
+    value_node: cst.BaseExpression, index_node: cst.BaseExpression
+) -> cst.Subscript:
+    return cst.Subscript(
+        value=value_node,
+        slice=[cst.SubscriptElement(slice=cst.Index(value=index_node))],
+    )
