@@ -117,6 +117,11 @@ class Attribute(FluentCstNode):
             attr=cst.Name(value=attr),
         )
 
+    def __repr__(self) -> str:
+        or_part = f" | {self._bitor}" if self._bitor else ""
+        return f"Attribute('{self._path}'{or_part})"
+
+
 
 class List(FluentCstNode):
     def __init__(self, elements: list["str | bool | Call | RawNode"]) -> None:
