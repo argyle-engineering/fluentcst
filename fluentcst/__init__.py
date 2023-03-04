@@ -108,10 +108,25 @@ class Attribute(FluentCstNode):
         return self
 
     @staticmethod
-    def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute:
-        if len(parts) == 1:
-            return cst.Name(value=parts.pop())
+    def _name_or_attr(parts: list[str]) -> cst.Name | cst.Attribute | cst.Subscript:
         attr = parts.pop()
+        if len(parts) == 0:
+            return cst.Name(value=attr)
+
+        if attr.endswith("]"):
+            path, index = attr.split("[")
+            index = index[:-1]
+            if index.isalnum():
+                index = int(index)
+            return cst.Subscript(
+                value=cst.Attribute(
+                    value=Attribute._name_or_attr(parts), attr=cst.Name(value=path)
+                ),
+                slice=[
+                    cst.SubscriptElement(slice=cst.Index(value=_value(index).to_cst()))
+                ],
+            )
+
         return cst.Attribute(
             value=Attribute._name_or_attr(parts),
             attr=cst.Name(value=attr),
