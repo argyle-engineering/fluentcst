@@ -83,10 +83,10 @@ class Attribute(FluentCstNode):
 
     def to_cst(self) -> cst.Attribute | cst.BinaryOperation:
         parts = self._path.split(".")
-        import_symbol = parts.pop()
+        last_part = parts.pop()
         attr = cst.Attribute(
             value=self._name_or_attr(parts),
-            attr=cst.Name(value=import_symbol),
+            attr=cst.Name(value=last_part),
         )
 
         if self._bitor:
