@@ -118,13 +118,11 @@ class Attribute(FluentCstNode):
             index = index[:-1]
             if index.isalnum():
                 index = int(index)
-            return cst.Subscript(
-                value=cst.Attribute(
+            return _subscript(
+                cst.Attribute(
                     value=Attribute._name_or_attr(parts), attr=cst.Name(value=path)
                 ),
-                slice=[
-                    cst.SubscriptElement(slice=cst.Index(value=_value(index).to_cst()))
-                ],
+                _value(index).to_cst(),
             )
 
         return cst.Attribute(
@@ -135,7 +133,6 @@ class Attribute(FluentCstNode):
     def __repr__(self) -> str:
         or_part = f" | {self._bitor}" if self._bitor else ""
         return f"Attribute('{self._path}'{or_part})"
-
 
 
 class List(FluentCstNode):
@@ -212,16 +209,7 @@ class Annotation(FluentCstNode):
     @staticmethod
     def _type_name_or_list(type_: str | list[str]) -> cst.Name | cst.Subscript:
         if isinstance(type_, list):
-            return cst.Subscript(
-                value=cst.Name(value="list"),
-                slice=[
-                    cst.SubscriptElement(
-                        slice=cst.Index(
-                            value=cst.Name(value=type_[0]),
-                        ),
-                    )
-                ],
-            )
+            return _subscript(cst.Name(value="list"), cst.Name(value=type_[0]))
         return cst.Name(value=type_)
 
 
@@ -423,3 +411,12 @@ def _value(v):
             return v
         case _:
             raise Exception(f"Unexpected value {v} of type {type(v)}")
+
+
+def _subscript(
+    value_node: cst.BaseExpression, index_node: cst.BaseExpression
+) -> cst.Subscript:
+    return cst.Subscript(
+        value=value_node,
+        slice=[cst.SubscriptElement(slice=cst.Index(value=index_node))],
+    )
