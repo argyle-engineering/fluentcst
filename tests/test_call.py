@@ -28,6 +28,10 @@ def test_kwargs():
     assert fcst.Call("func", a1="v1", a2="v2").to_code() == 'func(a1 = "v1", a2 = "v2")'
 
 
+def test_kwargs_dict():
+    assert fcst.Call("func", a1={"f1": "v1"}).to_code() == 'func(a1 = {"f1": "v1"})'
+
+
 def test_args_and_kwargs():
     assert (
         fcst.Call("func", "v1", "v2", a1="v1", a2="v2").to_code()

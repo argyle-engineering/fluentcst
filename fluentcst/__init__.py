@@ -218,7 +218,7 @@ class Call(FluentCstNode):
         self,
         name__: str,
         *args: str | bool | int | Name | Attribute,
-        **kwargs: str | bool | int,
+        **kwargs: str | bool | int | dict,
     ) -> None:
         self._name = name__
         self._args = args
