@@ -36,7 +36,7 @@ class String(FluentCstNode):
     """SimpleString for now only."""
 
     def __init__(self, value: str) -> None:
-        self._value = value
+        self._value = value.replace('"', '\\"')
 
     def to_cst(self) -> cst.SimpleString:
         return cst.SimpleString(value=f'"{self._value}"')
