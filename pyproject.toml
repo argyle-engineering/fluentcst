@@ -11,7 +11,7 @@ libcst = "^0.4.9"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.3.0"
+pytest = "^7.3.1"
 pytest-clarity = "^1.0.1"
 pytest-cov = "^4.0.0"
 taskipy = "^1.10.4"
