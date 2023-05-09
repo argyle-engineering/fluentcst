@@ -209,7 +209,10 @@ class Annotation(FluentCstNode):
     @staticmethod
     def _type_name_or_list(type_: str | list[str]) -> cst.Name | cst.Subscript:
         if isinstance(type_, list):
-            return _subscript(cst.Name(value="list"), cst.Name(value=type_[0]))
+            if len(type_) > 0:
+                return _subscript(cst.Name(value="list"), cst.Name(value=type_[0]))
+            else:
+                return cst.Name(value="list")
         return cst.Name(value=type_)
 
 
@@ -256,7 +259,7 @@ class ClassDef(FluentCstNode):
         | None = None,
         type: str | list[str] | None = None,
     ) -> Self:
-        if type:
+        if type is not None:
             assign = cst.AnnAssign(
                 target=cst.Name(value=name), annotation=Annotation(type).to_cst()
             )
