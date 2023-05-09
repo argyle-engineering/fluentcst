@@ -58,3 +58,13 @@ def test_field_with_list_type():
             f1: list[int]
     """
     )
+
+
+def test_field_with_untyped_list():
+    code = fcst.ClassDef("Cls1").field("f1", type=[]).to_code()
+    assert code == dedent(
+        """\
+        class Cls1:
+            f1: list
+    """
+    )
