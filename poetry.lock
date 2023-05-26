@@ -207,6 +207,7 @@ files = [
     {file = "libcst-0.4.10-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3e9d9fdd9a9b9b8991936ff1c07527ce7ef396c8233280ba9a7137e72c2e48e"},
     {file = "libcst-0.4.10-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7e1b4cbaf7b1cdad5fa3eababe42d5b46c0d52afe13c5ba4eac2495fc57630ea"},
     {file = "libcst-0.4.10-cp39-cp39-win_amd64.whl", hash = "sha256:bcbd07cec3d7a7be6f0299b0c246e085e3d6cc8af367e2c96059183b97c2e2fe"},
+    {file = "libcst-0.4.10.tar.gz", hash = "sha256:b98a829d96e8b209fb761b00cd1bacc27c70eae77d00e57976e5ae2c718c3f81"},
 ]
 
 [package.dependencies]
@@ -547,14 +548,14 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.5.0"
+version = "4.6.2"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typing_extensions-4.5.0-py3-none-any.whl", hash = "sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4"},
-    {file = "typing_extensions-4.5.0.tar.gz", hash = "sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb"},
+    {file = "typing_extensions-4.6.2-py3-none-any.whl", hash = "sha256:3a8b36f13dd5fdc5d1b16fe317f5668545de77fa0b8e02006381fd49d731ab98"},
+    {file = "typing_extensions-4.6.2.tar.gz", hash = "sha256:06006244c70ac8ee83fa8282cb188f697b8db25bc8b4df07be1873c43897060c"},
 ]
 
 [[package]]
@@ -577,4 +578,4 @@ typing-extensions = ">=3.7.4"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a77dd0784fe08d187f12f5f659688f954968d3d7a05bfb9251e6a984d9754047"
+content-hash = "456668e265ae23df51ef474907a4752ce9bb1d9be89c53ee8b52f8988c9fd09e"
