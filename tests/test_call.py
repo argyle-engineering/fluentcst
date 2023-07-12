@@ -41,3 +41,7 @@ def test_args_and_kwargs():
 
 def test_boolean_kwargs():
     assert fcst.Call("func", a1="v1", a2=True).to_code() == 'func(a1 = "v1", a2 = True)'
+
+
+def test_attribute_name():
+    assert fcst.Call("pkg.func").to_code() == "pkg.func()"

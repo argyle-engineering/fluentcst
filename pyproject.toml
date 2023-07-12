@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-libcst = "^0.4 || ^1"
+libcst = ">=0.4, <2"
 typing-extensions = "^4"
 
 [tool.poetry.dev-dependencies]
@@ -19,7 +19,7 @@ black = "^23.3.0"
 
 [tool.taskipy.tasks]
 test = "pytest --cov=fluentcst tests -vv"
-check_types = "(npm list -g pyright@1.1.295 || npm install -g pyright@1.1.295) && pyright"
+check_types = "(npm list -g pyright@1.1.306 || npm install -g pyright@1.1.306) && pyright"
 fmt = "black fluentcst tests"
 check_fmt = "black --check ."
 
