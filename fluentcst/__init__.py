@@ -232,7 +232,7 @@ class Call(FluentCstNode):
             cst.Arg(value=_value(v).to_cst(), keyword=cst.Name(value=k))
             for k, v in self._kwargs.items()
         ]
-        return cst.Call(func=cst.Name(value=self._name), args=call_args)
+        return cst.Call(func=_name_or_attr(self._name), args=call_args)
 
 
 class ClassDef(FluentCstNode):
@@ -314,18 +314,10 @@ class ImportFrom(FluentCstNode):
         self._symbol = symbol
 
     def to_cst(self) -> cst.SimpleStatementLine:
-        module = (
-            Attribute(self._path).to_cst()
-            if "." in self._path
-            else cst.Name(value=self._path)
-        )
-        # Technically Attribute.to_cst() can produce BinaryOperation, but not in here.
-        assert isinstance(module, cst.Attribute) or isinstance(module, cst.Name)
-
         return cst.SimpleStatementLine(
             body=[
                 cst.ImportFrom(
-                    module=module,
+                    module=_name_or_attr(self._path),
                     names=[cst.ImportAlias(name=cst.Name(value=self._symbol))],
                 )
             ]
@@ -423,3 +415,10 @@ def _subscript(
         value=value_node,
         slice=[cst.SubscriptElement(slice=cst.Index(value=index_node))],
     )
+
+
+def _name_or_attr(symbol: str) -> cst.Attribute | cst.Name:
+    node = Attribute(symbol).to_cst() if "." in symbol else cst.Name(value=symbol)
+    # Technically Attribute.to_cst() can produce BinaryOperation, but not in here.
+    assert isinstance(node, cst.Attribute | cst.Name)
+    return node
