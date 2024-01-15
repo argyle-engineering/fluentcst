@@ -42,6 +42,11 @@ class String(FluentCstNode):
         return cst.SimpleString(value=f'"{self._value}"')
 
 
+class NoneValue(FluentCstNode):
+    def to_cst(self) -> cst.Name:
+        return cst.Name(value="None")
+
+
 class Boolean(FluentCstNode):
     def __init__(self, value: bool) -> None:
         self._value = value
@@ -350,6 +355,11 @@ def _value(v: bool) -> Boolean:
 
 
 @overload
+def _value(v: None) -> NoneValue:
+    ...
+
+
+@overload
 def _value(v: dict[str, str]) -> Dict:
     ...
 
@@ -398,6 +408,8 @@ def _value(v):
             return Boolean(v)
         case int():
             return Integer(v)
+        case None:
+            return NoneValue()
         case dict():
             return Dict().from_dict(v)
         case list():

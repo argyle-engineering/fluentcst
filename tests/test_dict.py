@@ -10,6 +10,11 @@ def test_integer_fields():
     assert fcst.Dict.from_dict({"f1": 1}).to_code() == '{"f1": 1}'
 
 
+def test_none_value():
+    code = fcst.Dict.from_dict({"f1": None}).to_code()
+    assert code == '{"f1": None}'
+
+
 def test_attribute_value():
     code = fcst.Dict().element("f1", fcst.Attribute("Person.name")).to_code()
     assert code == '{"f1": Person.name}'
