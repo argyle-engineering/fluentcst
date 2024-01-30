@@ -15,7 +15,7 @@ pytest = "^8.0.0"
 pytest-clarity = "^1.0.1"
 pytest-cov = "^4.1.0"
 taskipy = "^1.12.2"
-black = "^23.12.1"
+black = "^24.1.1"
 
 [tool.taskipy.tasks]
 test = "pytest --cov=fluentcst tests -vv"
