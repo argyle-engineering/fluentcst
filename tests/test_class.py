@@ -68,3 +68,23 @@ def test_field_with_untyped_list():
             f1: list
     """
     )
+
+
+def test_class_with_base_class():
+    code = fcst.ClassDef("Cls1").base("Base").to_code()
+    assert code == dedent(
+        """\
+        class Cls1(Base):
+            pass
+    """
+    )
+
+
+def test_class_with_base_class_containing_dot():
+    code = fcst.ClassDef("Cls1").base("module.Base").to_code()
+    assert code == dedent(
+        """\
+        class Cls1(module.Base):
+            pass
+    """
+    )

@@ -281,7 +281,14 @@ class ClassDef(FluentCstNode):
         return self
 
     def to_cst(self) -> cst.ClassDef:
-        bases = [cst.Arg(value=cst.Name(value=base_cls)) for base_cls in self._bases]
+        bases = [
+            cst.Arg(
+                value=Attribute(base_cls).to_cst()
+                if "." in base_cls
+                else cst.Name(value=base_cls)
+            )
+            for base_cls in self._bases
+        ]
         return cst.ClassDef(
             name=cst.Name(value=self._name),
             body=cst.IndentedBlock(body=self._fields),
